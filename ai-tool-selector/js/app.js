@@ -21,6 +21,7 @@ var App = (function () {
     els.confidenceBar = document.getElementById('confidence-bar');
     els.confidenceValue = document.getElementById('confidence-value');
     els.alternativesContainer = document.getElementById('alternatives');
+    els.modelHint = document.getElementById('model-hint');
     els.promptOutput = document.getElementById('prompt-output');
     els.copyOpenBtn = document.getElementById('copy-open-btn');
     els.copyOpenLabel = document.getElementById('copy-open-label');
@@ -160,6 +161,15 @@ var App = (function () {
   function renderPrompt(toolId, input) {
     var optimized = PromptOptimizer.generate(toolId, input);
     els.promptOutput.textContent = optimized;
+
+    // 推奨モデルヒントの表示
+    var model = PromptOptimizer.getRecommendedModel(toolId);
+    if (model) {
+      els.modelHint.textContent = model + ' を選択してください';
+      els.modelHint.style.display = '';
+    } else {
+      els.modelHint.style.display = 'none';
+    }
   }
 
   /**

@@ -147,15 +147,7 @@ var PromptOptimizer = (function () {
       return userInput;
     }
 
-    var prompt = template.structure(userInput.trim());
-
-    // 推奨モデルがある場合は注記を先頭に追加
-    var model = RECOMMENDED_MODELS[toolId];
-    if (model) {
-      prompt = '[ ' + model + ' を選択してください ]\n\n' + prompt;
-    }
-
-    return prompt;
+    return template.structure(userInput.trim());
   }
 
   /**
