@@ -162,14 +162,23 @@ var App = (function () {
     var optimized = PromptOptimizer.generate(toolId, input);
     els.promptOutput.textContent = optimized;
 
-    // 推奨モデルヒントの表示
-    var model = PromptOptimizer.getRecommendedModel(toolId);
-    if (model) {
-      els.modelHint.textContent = model + ' を選択してください';
+    // 推奨ヒントの表示（複数行対応）
+    var result = PromptOptimizer.getRecommendedHints(toolId, input);
+    var hints = result.hints;
+    if (hints.length > 0) {
+      els.modelHint.innerHTML = hints.map(function (h) {
+        return '<span class="hint-line">' + escapeHtml(h) + '</span>';
+      }).join('');
       els.modelHint.style.display = '';
     } else {
       els.modelHint.style.display = 'none';
     }
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   /**
