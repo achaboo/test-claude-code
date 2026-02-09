@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>AI Tool Selector</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>AI Tool Selector</h1>
+      <p>入力内容から最適なAIツールを判定します</p>
+    </header>
+
+    <!-- Input Section -->
+    <section class="card input-section">
+      <textarea
+        id="user-input"
+        placeholder="何をしたいですか？&#10;例: Pythonでソート関数を書きたい&#10;例: この画像の内容を分析して&#10;例: 最新のAI業界ニュースを調べて"
+      ></textarea>
+      <div class="input-footer">
+        <span id="char-count" class="char-count">0文字</span>
+        <span class="shortcut-hint">Ctrl + Enter で判定</span>
+      </div>
+      <div class="btn-row" style="margin-top: 12px;">
+        <button id="analyze-btn" class="btn-primary">
+          判定する
+        </button>
+        <button id="clear-btn" class="btn-clear">
+          クリア
+        </button>
+      </div>
+    </section>
+
+    <!-- Result Section (hidden by default) -->
+    <section id="result-section" class="result-section">
+      <!-- Recommended Tool -->
+      <div class="section-label">推奨ツール</div>
+      <div id="recommended-card" class="card recommended-card">
+        <div class="recommended-header">
+          <span id="recommended-name" class="recommended-name"></span>
+          <span id="recommended-plan" class="plan-badge"></span>
+        </div>
+        <div id="recommended-reason" class="recommended-reason"></div>
+        <div class="confidence-container">
+          <div class="confidence-track">
+            <div id="confidence-bar" class="confidence-bar"></div>
+          </div>
+          <span id="confidence-value" class="confidence-value"></span>
+        </div>
+      </div>
+
+      <!-- Alternatives -->
+      <div class="alternatives-section">
+        <div class="section-label">他の候補</div>
+        <div id="alternatives" class="alternatives-grid"></div>
+      </div>
+
+      <!-- Optimized Prompt -->
+      <div class="section-label" style="margin-top: 16px;">最適化プロンプト</div>
+      <div class="card prompt-card">
+        <div id="model-hint" class="model-hint" style="display: none;"></div>
+        <div id="prompt-output" class="prompt-output"></div>
+        <button id="copy-open-btn" class="btn-action">
+          <span id="copy-open-label">コピーして開く</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
+
+  <!-- Scripts (order matters: dependencies first) -->
+  <script src="js/classifier.js"></script>
+  <script src="js/prompt.js"></script>
+  <script src="js/launcher.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
