@@ -146,6 +146,38 @@ body {
   transform: scale(0.98);
 }
 
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-row .btn-primary {
+  flex: 1;
+}
+
+.btn-clear {
+  padding: 14px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition), transform var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.btn-clear:hover {
+  background-color: var(--color-bg);
+}
+
+.btn-clear:active {
+  transform: scale(0.98);
+}
+
 .btn-action {
   display: block;
   width: 100%;

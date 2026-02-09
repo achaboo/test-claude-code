@@ -127,6 +127,18 @@ var PromptOptimizer = (function () {
   }
 
   /**
+   * ツール別の推奨モデル名
+   */
+  var RECOMMENDED_MODELS = {
+    claude: 'Opus 4.6',
+    gemini: '2.5 Pro',
+    chatgpt: null,
+    perplexity: null,
+    copilot: null,
+    grok: null
+  };
+
+  /**
    * 最適化されたプロンプトを生成
    */
   function generate(toolId, userInput) {
@@ -134,10 +146,27 @@ var PromptOptimizer = (function () {
     if (!template) {
       return userInput;
     }
-    return template.structure(userInput.trim());
+
+    var prompt = template.structure(userInput.trim());
+
+    // 推奨モデルがある場合は注記を先頭に追加
+    var model = RECOMMENDED_MODELS[toolId];
+    if (model) {
+      prompt = '[ ' + model + ' を選択してください ]\n\n' + prompt;
+    }
+
+    return prompt;
+  }
+
+  /**
+   * 推奨モデル名を取得
+   */
+  function getRecommendedModel(toolId) {
+    return RECOMMENDED_MODELS[toolId] || null;
   }
 
   return {
-    generate: generate
+    generate: generate,
+    getRecommendedModel: getRecommendedModel
   };
 })();

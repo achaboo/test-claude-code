@@ -27,8 +27,11 @@ var App = (function () {
     els.charCount = document.getElementById('char-count');
     els.notification = document.getElementById('notification');
 
+    els.clearBtn = document.getElementById('clear-btn');
+
     // イベント登録
     els.analyzeBtn.addEventListener('click', handleAnalyze);
+    els.clearBtn.addEventListener('click', handleClear);
     els.copyOpenBtn.addEventListener('click', handleCopyAndOpen);
     els.input.addEventListener('input', updateCharCount);
 
@@ -49,6 +52,18 @@ var App = (function () {
   function updateCharCount() {
     var len = els.input.value.length;
     els.charCount.textContent = len + '文字';
+  }
+
+  /**
+   * 入力と結果をクリア
+   */
+  function handleClear() {
+    els.input.value = '';
+    currentResult = null;
+    currentToolId = null;
+    els.resultSection.classList.remove('visible');
+    updateCharCount();
+    els.input.focus();
   }
 
   /**
