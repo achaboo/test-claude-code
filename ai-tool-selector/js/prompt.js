@@ -126,16 +126,112 @@ var PromptOptimizer = (function () {
     });
   }
 
+  // ============================================================
+  // モード推奨ロジック
+  // ============================================================
+
   /**
-   * ツール別の推奨モデル名
+   * ツール別の利用可能モード（UIに表示される正式名称）
    */
-  var RECOMMENDED_MODELS = {
-    claude: 'Opus 4.6',
-    gemini: '2.5 Pro',
-    chatgpt: null,
-    perplexity: null,
-    copilot: null,
-    grok: null
+  var TOOL_MODES = {
+    claude: {
+      modes: ['Opus 4.6', 'Sonnet 4.5', 'Haiku 4.5', '拡張思考'],
+      selectMode: function (text) {
+        // 複雑な推論・段階的思考 → 拡張思考
+        if (/(ステップバイステップ|段階的|論理的に|証明|数学|推論の過程)/.test(text)) {
+          return { mode: '拡張思考' };
+        }
+        // コーディング・長文分析 → Opus 4.6
+        if (hasCodeContext(text) || text.length > 500) {
+          return { mode: 'Opus 4.6' };
+        }
+        // 軽量タスク → Sonnet 4.5
+        if (text.length < 100) {
+          return { mode: 'Sonnet 4.5' };
+        }
+        return { mode: 'Opus 4.6' };
+      }
+    },
+    gemini: {
+      modes: ['Pro', '思考モード', '高速モード'],
+      selectMode: function (text) {
+        var needsNormalChat = /(続き|会話を続|履歴|さっきの|前回|ファイルを(アップロード|添付)|複数回)/.test(text);
+        var chatType = needsNormalChat ? 'normal' : 'temporary';
+
+        // 複雑な分析・推論 → 思考モード
+        if (/(分析|推論|考察|批判的|比較検討|深く|詳細に)/.test(text) || text.length > 500) {
+          return { mode: '思考モード', chatType: chatType };
+        }
+        // 短い質問・素早い回答 → 高速モード
+        if (text.length < 100 && !/(画像|写真|動画|YouTube)/.test(text)) {
+          return { mode: '高速モード', chatType: chatType };
+        }
+        // デフォルト → Pro
+        return { mode: 'Pro', chatType: chatType };
+      }
+    },
+    chatgpt: {
+      modes: ['GPT-5.2 Instant', 'GPT-5.2 Thinking'],
+      selectMode: function (text) {
+        // 複雑な質問 → Thinking
+        if (/(分析|推論|ステップバイステップ|詳細に|比較)/.test(text) || text.length > 300) {
+          return { mode: 'GPT-5.2 Thinking' };
+        }
+        return { mode: 'GPT-5.2 Instant' };
+      }
+    },
+    perplexity: {
+      modes: ['クイック検索', 'Pro検索'],
+      focusModes: ['Web', 'Academic', 'Writing', 'Wolfram|Alpha', 'YouTube', 'Reddit'],
+      selectMode: function (text) {
+        var result = {};
+
+        // 深い調査 → Pro検索
+        if (/(詳しく|徹底的|網羅的|比較検討|深く調べ)/.test(text)) {
+          result.mode = 'Pro検索';
+        } else {
+          result.mode = 'クイック検索';
+        }
+
+        // フォーカスモード判定
+        if (/(論文|学術|研究|ジャーナル|査読)/.test(text)) {
+          result.focus = 'Academic';
+        } else if (/(YouTube|動画|ビデオ)/.test(text)) {
+          result.focus = 'YouTube';
+        } else if (/(Reddit|掲示板|フォーラム)/.test(text)) {
+          result.focus = 'Reddit';
+        } else if (/(数学|計算|方程式|積分|微分)/.test(text)) {
+          result.focus = 'Wolfram|Alpha';
+        } else if (/(作文|文章|執筆|ライティング)/.test(text)) {
+          result.focus = 'Writing';
+        }
+
+        return result;
+      }
+    },
+    copilot: {
+      modes: ['標準', 'Think Deeper'],
+      selectMode: function (text) {
+        if (/(分析|詳しく|比較|複雑|設計)/.test(text) || text.length > 300) {
+          return { mode: 'Think Deeper' };
+        }
+        return { mode: '標準' };
+      }
+    },
+    grok: {
+      modes: ['標準', 'Think', 'DeepSearch'],
+      selectMode: function (text) {
+        // 網羅的な調査 → DeepSearch
+        if (/(調べて|検索|最新|ニュース|まとめて|網羅)/.test(text)) {
+          return { mode: 'DeepSearch' };
+        }
+        // 推論・分析 → Think
+        if (/(分析|推論|なぜ|理由|考えて|ステップ)/.test(text)) {
+          return { mode: 'Think' };
+        }
+        return { mode: '標準' };
+      }
+    }
   };
 
   /**
@@ -151,14 +247,38 @@ var PromptOptimizer = (function () {
   }
 
   /**
-   * 推奨モデル名を取得
+   * 入力内容に基づく推奨ヒントを取得
+   * 戻り値: { hints: string[] } - 表示すべきヒント行の配列
    */
-  function getRecommendedModel(toolId) {
-    return RECOMMENDED_MODELS[toolId] || null;
+  function getRecommendedHints(toolId, userInput) {
+    var toolMode = TOOL_MODES[toolId];
+    if (!toolMode) return { hints: [] };
+
+    var result = toolMode.selectMode(userInput);
+    var hints = [];
+
+    // モード名
+    if (result.mode) {
+      hints.push('モード: ' + result.mode);
+    }
+
+    // Gemini のチャットタイプ
+    if (result.chatType === 'normal') {
+      hints.push('通常のチャットを使用してください');
+    } else if (result.chatType === 'temporary') {
+      hints.push('一時的なチャットを使用してください');
+    }
+
+    // Perplexity のフォーカスモード
+    if (result.focus) {
+      hints.push('フォーカス: ' + result.focus);
+    }
+
+    return { hints: hints };
   }
 
   return {
     generate: generate,
-    getRecommendedModel: getRecommendedModel
+    getRecommendedHints: getRecommendedHints
   };
 })();
