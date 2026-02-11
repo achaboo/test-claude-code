@@ -178,6 +178,29 @@ body {
   transform: scale(0.98);
 }
 
+.btn-action {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+}
+
+.btn-action:hover {
+  opacity: 0.9;
+}
+
+.btn-action:active {
+  transform: scale(0.98);
+}
+
 /* --- Result Section --- */
 .result-section {
   display: none;
@@ -368,6 +391,7 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--color-text);
+  margin-bottom: 12px;
 }
 
 /* --- Notification --- */
@@ -390,10 +414,6 @@ body {
 
 .notification.visible {
   bottom: 24px;
-}
-
-.notification.success {
-  background: #059669;
 }
 
 .notification.error {
@@ -456,7 +476,8 @@ body {
     font-size: 1.75rem;
   }
 
-  .btn-primary:hover {
+  .btn-primary:hover,
+  .btn-action:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-lg);
   }

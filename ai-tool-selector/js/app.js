@@ -23,13 +23,17 @@ var App = (function () {
     els.alternativesContainer = document.getElementById('alternatives');
     els.modelHint = document.getElementById('model-hint');
     els.promptOutput = document.getElementById('prompt-output');
+    els.copyOpenBtn = document.getElementById('copy-open-btn');
+    els.copyOpenLabel = document.getElementById('copy-open-label');
     els.charCount = document.getElementById('char-count');
     els.notification = document.getElementById('notification');
+
     els.clearBtn = document.getElementById('clear-btn');
 
     // イベント登録
     els.analyzeBtn.addEventListener('click', handleAnalyze);
     els.clearBtn.addEventListener('click', handleClear);
+    els.copyOpenBtn.addEventListener('click', handleCopyAndOpen);
     els.input.addEventListener('input', updateCharCount);
 
     // Enter + Ctrl/Cmd で判定
@@ -84,9 +88,6 @@ var App = (function () {
     renderResult(result);
     renderPrompt(currentToolId, input);
 
-    // プロンプトを自動コピー
-    copyToClipboard(els.promptOutput.textContent);
-
     // 結果セクションを表示してスクロール
     els.resultSection.classList.add('visible');
     els.resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -126,10 +127,13 @@ var App = (function () {
       });
       els.alternativesContainer.appendChild(card);
     });
+
+    // ボタンラベル更新
+    updateCopyButton(tool);
   }
 
   /**
-   * 代替ツールを選択（プロンプト再生成 + 自動コピー）
+   * 代替ツールを選択
    */
   function selectAlternative(toolId) {
     currentToolId = toolId;
@@ -148,9 +152,7 @@ var App = (function () {
     els.confidenceValue.textContent = result.confidence + '%';
 
     renderPrompt(toolId, els.input.value);
-
-    // 代替ツール選択時も自動コピー
-    copyToClipboard(els.promptOutput.textContent);
+    updateCopyButton(toolInfo);
   }
 
   /**
@@ -180,17 +182,31 @@ var App = (function () {
   }
 
   /**
-   * クリップボードにコピー
+   * コピー&オープンボタンのラベル更新
    */
-  function copyToClipboard(text) {
+  function updateCopyButton(tool) {
+    els.copyOpenLabel.textContent = 'コピーして ' + tool.name + ' を開く';
+    els.copyOpenBtn.style.backgroundColor = tool.color;
+  }
+
+  /**
+   * クリップボードにコピーしてツールを開く
+   * iOS対応: 両方の操作をユーザージェスチャー内で実行
+   */
+  function handleCopyAndOpen() {
+    var promptText = els.promptOutput.textContent;
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () {
-        showNotification('\u2713 \u30d7\u30ed\u30f3\u30d7\u30c8\u3092\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f');
+      navigator.clipboard.writeText(promptText).then(function () {
+        showNotification('プロンプトをコピーしました');
+        Launcher.openTool(currentToolId);
       }).catch(function () {
-        fallbackCopy(text);
+        fallbackCopy(promptText);
+        Launcher.openTool(currentToolId);
       });
     } else {
-      fallbackCopy(text);
+      fallbackCopy(promptText);
+      Launcher.openTool(currentToolId);
     }
   }
 
@@ -206,9 +222,9 @@ var App = (function () {
     ta.select();
     try {
       document.execCommand('copy');
-      showNotification('\u2713 \u30d7\u30ed\u30f3\u30d7\u30c8\u3092\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f');
+      showNotification('プロンプトをコピーしました');
     } catch (e) {
-      showNotification('コピーに失敗しました。プロンプトを手動でコピーしてください', 'error');
+      showNotification('コピーに失敗しました。手動でコピーしてください', 'error');
     }
     document.body.removeChild(ta);
   }
@@ -218,7 +234,7 @@ var App = (function () {
    */
   function showNotification(message, type) {
     els.notification.textContent = message;
-    els.notification.className = 'notification visible' + (type === 'error' ? ' error' : ' success');
+    els.notification.className = 'notification visible' + (type === 'error' ? ' error' : '');
     setTimeout(function () {
       els.notification.className = 'notification';
     }, 2500);
